@@ -32,15 +32,15 @@ class Mongo(object):
                 existing['odds'] = game['odds']
                 existing['updated_at'] = datetime.utcnow()
                 result = self.book_odds_collection.update_one({"_id": existing["_id"]}, {"$set": {"odds": game["odds"], "updated_at": datetime.utcnow()}})
-                logger.info("Updated game {} with result {}", existing, result)
+                logger.info("Updated game {} with result {}".format(existing, result))
             elif existing == None:
                 result = self.book_odds_collection.insert_one(game)
-                logger.debug("Inserted game {} with id {}", game, result.inserted_id)
+                logger.debug("Inserted game {} with id {}".format(game, result.inserted_id))
 
 
     def insert_one(self, games: dict[str, any]) -> database:
         result = self.book_odds_collection.insert_one(games)
-        logger.debug("Inserted IDs:", result.inserted_id)
+        logger.debug("Inserted IDs: {}".format(result.inserted_id))
 
     def close(self):
         self.client.close()
