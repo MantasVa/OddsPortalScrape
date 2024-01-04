@@ -1,0 +1,6 @@
+{
+    "ConnectionString": "mongodb://localhost:27017",
+    "Database": "sports",
+    "BookOddsCollection": "odds",
+    "BasketballTeamsCollection": "teams"
+}
