@@ -37,10 +37,14 @@ class Mongo(object):
                 result = self.book_odds_collection.insert_one(game)
                 logger.debug("Inserted game {} with id {}".format(game, result.inserted_id))
 
-
     def insert_one(self, games: dict[str, any]) -> database:
         result = self.book_odds_collection.insert_one(games)
         logger.debug("Inserted IDs: {}".format(result.inserted_id))
+
+    # call like mongo.delete({'season': 'E2024'})
+    def delete(self, filter) -> database:
+        if filter:
+            self.book_odds_collection.delete_many(filter)
 
     def close(self):
         self.client.close()

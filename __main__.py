@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 from models import Sport
-from domain_mapper import DomainMapper, to_sport_name, to_team
+from domain_mapper import DomainMapper, to_sport_name
 from scraper import Scraper
 from mongo import Mongo
 
@@ -29,16 +29,17 @@ def main():
     configure_logger()
     config = get_config()
 
-#fix _ Current
-    # games = Scraper().scrape_oddsportal_historical(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague', 
-    #                                               start_season = '2021-2022', nseasons = 3, current_season = 'yes', max_page = 10)
+    games = Scraper().scrape_oddsportal_historical(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague', 
+                                                  start_season = '2023-2024', nseasons = 1, current_season = 'yes', max_page = 10)
     
-    games = Scraper().scrape_oddsportal_upcoming(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague')
+    # games = Scraper().scrape_oddsportal_upcoming(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague')
     
     mongo = Mongo(config)
     teams = mongo.get_teams()
     game_dicts = DomainMapper(teams).map_to_domain(games)
     mongo.insert_many(game_dicts)
+
+
     mongo.close()
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from datetime import datetime
@@ -23,7 +24,8 @@ class Scraper(object):
         self.options = webdriver.ChromeOptions()
         self.options.add_argument('headless')
         self.options.add_argument("--log-level=3")
-        self.driver = webdriver.Chrome(options=self.options)
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=service, options=self.options)
         # exception when no driver created
 
     SPORTS = [ 'soccer', 'basketball', 'esports', 'darts', 'tennis', 'baseball', 'rugby-union', 'rugby-league', 'american-football', 'hockey', 'volleyball', 'handball' ]
@@ -97,7 +99,6 @@ class Scraper(object):
             Season+=1
 
         if current_season == 'yes' : 
-            SEASON1 = '{}'.format(Season)
             if long_season:
                 SEASON1 = '{}-{}'.format(Season, Season+1)
             logger.info('We start to collect current season')
@@ -139,7 +140,8 @@ class Scraper(object):
             link_div = row.find('a', class_='cursor-pointer')
             game_link = link_div.get('href')
 
-            inside_divs = link_div.find('div').find_all('div', recursive=False)
+            event_row_click = row.find('a', class_='border-black-borders')
+            inside_divs = event_row_click.find('div').find_all('div', recursive=False)
             odd_home = inside_divs[1].find('p').text
             odd_away = inside_divs[2].find('p').text
 
@@ -154,9 +156,16 @@ class Scraper(object):
 
     def scrape_game_type_A(self, link: str, sport: str, tournament: str, scrapeType: ScrapeType, season: str, retries: int = 0, wait_time = 1) -> Game:
         self.driver.get(self.base_url + link)
+        self.scroll_to_the_bottom()
+
+        if scrapeType == ScrapeType.Upcoming or scrapeType == ScrapeType.CurrentSeasonHistorical:
+            season = ''
 
         home_team = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div//span')
-        away_team = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div[1]/div[3]//span')
+        away_team = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div/div/div[3]//span')
+
+        if home_team == None or away_team == None or len(home_team) < 3 or len(away_team) < 3:
+            logger.warning("Game teams {}:{} probably was scraped incorrectly".format(home_team, away_team))
 
         # Upcoming games do not have scores yet (duh)
         home_score, away_score = None, None
@@ -172,15 +181,36 @@ class Scraper(object):
         date_format = '%d %b %Y,%H:%M'
         date_time =  None if date_str == None else datetime.strptime(date_str, date_format)
 
-            # Now we collect all bookmaker
+        # Now we collect all bookmaker
         book_odds = []
-        for j in range(1,30): # only first 10 bookmakers displayed
-            book = self.get_text('//div[contains(@class, "text-xs")][{}]/div[@provider-name="0"]/a[2]/p'.format(j)) # bookmaker name
-            odd_home = self.get_text('//div[contains(@class, "text-xs")][{}]/div[2]//p'.format(j)) # home odd
-            odd_away = self.get_text('//div[contains(@class, "text-xs")][{}]/div[3]//p'.format(j)) # away odd
 
-            if (book != None):
+        soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+        books = soup.select('div.text-xs.border-black-borders')
+        for idx in range(len(books)): # only first 10 bookmakers displayed
+            try:
+                # //div[contains(@cl    ass, "text-xs")][{}]/div[@provider-name="0"]/a[2]/p
+                book = self.get_text('//div[contains(@class, "text-xs")][{}]/div[@provider-name="0"]/a[2]/p'.format(idx + 1)) # bookmaker name
+                
+                if book == None:
+                    continue
+
+                book_rows = books[idx].find_all('div', recursive=False)
+
+                p_odd =  book_rows[1].find('p')
+                odd_home = p_odd.text if p_odd is not None else '' # home odd
+                p_odd =  book_rows[2].find('p')
+                odd_away = p_odd.text if p_odd is not None else '' # away odd
+
+                try:
+                    float(odd_home)
+                    float(odd_away)
+                except ValueError:
+                    logger.warning("Skipped! Book {} odds {}:{} probably was scraped incorrectly".format(book, odd_home, odd_away))
+                    continue
+
                 book_odds = book_odds + [BookOdds(book, odd_home, odd_away)]
+            except:
+                logger.error("Exception was thrown for {}", book)
 
         if len(book_odds) > 0:
             logger.info("Game scraped {}:{} at {}".format(home_team, away_team, date_time))
