@@ -30,7 +30,7 @@ def main():
     config = get_config()
 
     games = Scraper().scrape_oddsportal_historical(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague', 
-                                                  start_season = '2023-2024', nseasons = 1, current_season = 'yes', max_page = 10)
+                                                   start_season = '2023-2024', nseasons = 1, current_season = 'yes', max_page = 10)
     
     # games = Scraper().scrape_oddsportal_upcoming(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague')
     

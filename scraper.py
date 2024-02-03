@@ -140,10 +140,10 @@ class Scraper(object):
             link_div = row.find('a', class_='cursor-pointer')
             game_link = link_div.get('href')
 
-            event_row_click = row.find('a', class_='border-black-borders')
-            inside_divs = event_row_click.find('div').find_all('div', recursive=False)
-            odd_home = inside_divs[1].find('p').text
-            odd_away = inside_divs[2].find('p').text
+            event_row_click = row.find(attrs={'data-testid': 'game-row' })
+            inside_divs = event_row_click.find_all('div', recursive=False)
+            odd_home = inside_divs[0].find('p').text
+            odd_away = inside_divs[1].find('p').text
 
             if odd_home != "-" or odd_away != "-":
                 game = self.scrape_game_type_A(game_link, sport, tournament, scrapeType, season)
@@ -171,8 +171,8 @@ class Scraper(object):
         home_score, away_score = None, None
 
         if scrapeType != ScrapeType.Upcoming:
-            home_score = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div/div/div//div[contains(@class, "w-full")]')
-            away_score = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div[1]/div[3]/div[2]/div')
+            home_score = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div/div/div[1]//div[contains(@class, "text-gray-dark")]')
+            away_score = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div/div/div[3]//div[contains(@class, "text-gray-dark")]')
 
         date_portion_1 = self.get_text('//div[contains(@class, "event-start-time")]/following-sibling::p[2]')
         date_portion_2 = self.get_text('//div[contains(@class, "event-start-time")]/following-sibling::p[3]')
