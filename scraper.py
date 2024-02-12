@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
@@ -24,8 +23,7 @@ class Scraper(object):
         self.options = webdriver.ChromeOptions()
         self.options.add_argument('headless')
         self.options.add_argument("--log-level=3")
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=self.options)
+        self.driver = webdriver.Chrome(service=Service(), options=self.options)
         # exception when no driver created
 
     SPORTS = [ 'soccer', 'basketball', 'esports', 'darts', 'tennis', 'baseball', 'rugby-union', 'rugby-league', 'american-football', 'hockey', 'volleyball', 'handball' ]
