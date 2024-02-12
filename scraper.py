@@ -6,6 +6,7 @@ from selenium.common.exceptions import WebDriverException
 from datetime import datetime
 from bs4 import BeautifulSoup
 import logging
+import re
 
 from models import Game, BookOdds, ScrapeType
 from domain_mapper import to_sport
@@ -140,11 +141,24 @@ class Scraper(object):
 
             event_row_click = row.find(attrs={'data-testid': 'game-row' })
             inside_divs = event_row_click.find_all('div', recursive=False)
+
+            links = event_row_click.find_all('a', {"title" : re.compile(r".*")})
+
+            if len(links) == 0:
+                logger.warning("No links for game was scraped")
+                continue
+
+            home = links[0].text
+            away = links[1].text
+
+            if home == None or away == None or len(home) < 3 or len(away) < 3:
+                logger.warning("Game teams {}:{} probably was scraped incorrectly".format(home, away))
+
             odd_home = inside_divs[0].find('p').text
             odd_away = inside_divs[1].find('p').text
 
             if odd_home != "-" or odd_away != "-":
-                game = self.scrape_game_type_A(game_link, sport, tournament, scrapeType, season)
+                game = self.scrape_game_type_A(game_link, sport, tournament, scrapeType, season, home, away)
                 if game != None:
                     games += [ game ]
             else:
@@ -152,18 +166,12 @@ class Scraper(object):
         
         return(games) 
 
-    def scrape_game_type_A(self, link: str, sport: str, tournament: str, scrapeType: ScrapeType, season: str, retries: int = 0, wait_time = 1) -> Game:
+    def scrape_game_type_A(self, link: str, sport: str, tournament: str, scrapeType: ScrapeType, season: str, home: str, away: str, retries: int = 0, wait_time = 1) -> Game:
         self.driver.get(self.base_url + link)
         self.scroll_to_the_bottom()
 
         if scrapeType == ScrapeType.Upcoming or scrapeType == ScrapeType.CurrentSeasonHistorical:
             season = ''
-
-        home_team = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div//span')
-        away_team = self.get_text('//*[@id="app"]/div/div[1]/div/main/div[2]/div[2]/div/div/div[3]//span')
-
-        if home_team == None or away_team == None or len(home_team) < 3 or len(away_team) < 3:
-            logger.warning("Game teams {}:{} probably was scraped incorrectly".format(home_team, away_team))
 
         # Upcoming games do not have scores yet (duh)
         home_score, away_score = None, None
@@ -211,14 +219,14 @@ class Scraper(object):
                 logger.error("Exception was thrown for {}", book)
 
         if len(book_odds) > 0:
-            logger.info("Game scraped {}:{} at {}".format(home_team, away_team, date_time))
-            return Game(to_sport(sport), tournament, home_team, away_team, date_time, season, home_score, away_score, book_odds, self.base_url + link)
+            logger.info("Game scraped {}:{} at {}".format(home, away, date_time))
+            return Game(to_sport(sport), tournament, home, away, date_time, season, home_score, away_score, book_odds, self.base_url + link)
         elif retries < 10:
             # Retry policy, increase delay time and cut out once 10 retries are reached
             logger.warning("Game unable to be scraped, could not locate books Retrying.")
             self.scrape_game_type_A(link, sport, tournament, scrapeType, season, retries + 1, wait_time * 2)
         else:
-            logger.warning("Game {}:{} at {} was unable to be scraped at location {}. Skipping.".format(home_team, away_team, date_time, self.base_url + link))
+            logger.warning("Game {}:{} at {} was unable to be scraped at location {}. Skipping.".format(home, away, date_time, self.base_url + link))
             return None    
 
     def get_text(self, target):
