@@ -21,9 +21,22 @@ class ScrapeType(Enum):
     CurrentSeasonHistorical = 2
     Upcoming = 3
 
+class BookOdds:
+    def __init__(self, name: str, home: float, away: float) -> None:
+        self.name = name
+        self.home = home
+        self.away = away
+
+class Team:
+    def __init__(self, name: str, alias: str, code: str, external_name: str = None) -> None:
+        self.name = name
+        self.alias = alias
+        self.code = code    
+        self.external_name = external_name
+
 class Game:
     def __init__(self, sport: Sport, tournament: str, home: str, away: str, date: datetime, season: str, 
-                 home_score: int, away_score: int, odds: [], link: str, id = None) -> None:
+                 home_score: int, away_score: int, odds: list[BookOdds], link: str, id = None) -> None:
         self.sport = sport
         self.tournament = tournament
         self.home = home
@@ -38,16 +51,3 @@ class Game:
 
     def __str__(self):
         return f"{self.home} {self.home_score}:{self.away_score} {self.away} {self.date} {self.season}"
-    
-class BookOdds:
-    def __init__(self, name: str, home: str, away: str) -> None:
-        self.name = name
-        self.home = home
-        self.away = away
-
-class Team:
-    def __init__(self, name: str, alias: str, code: str, external_name: str = None) -> None:
-        self.name = name
-        self.alias = alias
-        self.code = code    
-        self.external_name = external_name

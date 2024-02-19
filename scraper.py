@@ -148,8 +148,8 @@ class Scraper(object):
                 logger.warning("No links for game was scraped")
                 continue
 
-            home = links[0].text
-            away = links[1].text
+            home = links[0]['title']
+            away = links[1]['title']
 
             if home == None or away == None or len(home) < 3 or len(away) < 3:
                 logger.warning("Game teams {}:{} probably was scraped incorrectly".format(home, away))
@@ -208,8 +208,8 @@ class Scraper(object):
                 odd_away = p_odd.text if p_odd is not None else '' # away odd
 
                 try:
-                    float(odd_home)
-                    float(odd_away)
+                    odd_home = float(odd_home)
+                    odd_away = float(odd_away)
                 except ValueError:
                     logger.warning("Skipped! Book {} odds {}:{} probably was scraped incorrectly".format(book, odd_home, odd_away))
                     continue

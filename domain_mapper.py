@@ -72,7 +72,7 @@ class DomainMapper(object):
             case (Sport.Basketball, EUROLEAGUE_TOURNAMENT, ''):
                 return get_current_euroleague_season()
             case (Sport.Basketball, EUROLEAGUE_TOURNAMENT, _):
-                return 'E' + season[0:4]
+                return season if season[0] == 'E' and len(season) == 5 else 'E' + season[0:4]
             case _:
                 return season
 

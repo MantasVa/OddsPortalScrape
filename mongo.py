@@ -37,6 +37,10 @@ class Mongo(object):
                 result = self.book_odds_collection.insert_one(game)
                 logger.debug("Inserted game {} with id {}".format(game, result.inserted_id))
 
+    def update_one(self, id, game: dict[str, any]) -> database:
+        result = self.book_odds_collection.update_one({"_id": id}, {"$set": {"odds": game["odds"], "updated_at": datetime.utcnow()}})
+        logger.debug("Updated IDs: {}".format(result.upserted_id))
+
     def insert_one(self, games: dict[str, any]) -> database:
         result = self.book_odds_collection.insert_one(games)
         logger.debug("Inserted IDs: {}".format(result.inserted_id))
