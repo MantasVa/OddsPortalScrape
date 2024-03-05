@@ -3,7 +3,7 @@ import time
 import json
 from datetime import datetime
 
-from models import Sport
+from models import Sport, ScrapeType
 from domain_mapper import DomainMapper, to_sport_name
 from scraper import Scraper
 from mongo import Mongo
@@ -30,10 +30,12 @@ def main():
     config = get_config()
 
     # games = Scraper().scrape_oddsportal_historical(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague', 
-    #                                                 start_season = '2023-2024', nseasons = 1, current_season = 'yes', max_page = 10)
+    #                                                 start_season = '2010-2011', nseasons = 1, current_season = 'no', max_page = 10)
     
     games = Scraper().scrape_oddsportal_upcoming(sport = to_sport_name(Sport.Basketball), country = 'europe', tournament= 'euroleague')
     
+    # games = Scraper().scrape_page_typeA(to_sport_name(Sport.Basketball), 'europe', 'euroleague', ScrapeType.Historical, '2009-2010', 1)
+
     mongo = Mongo(config)
     teams = mongo.get_teams()
     game_dicts = DomainMapper(teams).map_to_domain(games)

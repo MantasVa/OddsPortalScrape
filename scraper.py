@@ -22,7 +22,7 @@ class Scraper(object):
         self.base_url = 'https://www.oddsportal.com'
         self.wait_on_page_load = 3
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument('headless')
+        # self.options.add_argument('headless')
         self.options.add_argument("--log-level=3")
         self.driver = webdriver.Chrome(service=Service(), options=self.options)
         # exception when no driver created
@@ -136,8 +136,19 @@ class Scraper(object):
 
         games = []
         for row in eventRows:
-            link_div = row.find('a', class_='cursor-pointer')
-            game_link = link_div.get('href')
+            link_divs = row.find_all('a')
+            game_links = list(filter(lambda x: x.get('href') != None and "{}/{}/{}/".format(sport, country, tournament) in x.get('href') and x.get('href').endswith("{}/".format(tournament)) == False, link_divs))
+
+            game_link = None
+            if len(game_links) == 0:
+                logger.error("Game link was not found. Skipping")
+                continue
+            elif len(game_links) > 1:
+                game_link = game_links[0]['href']
+                logger.warning("There were multiple links found for game at link {}".format(game_link))
+            else:
+                game_link = game_links[0]['href']
+
 
             event_row_click = row.find(attrs={'data-testid': 'game-row' })
             inside_divs = event_row_click.find_all('div', recursive=False)
