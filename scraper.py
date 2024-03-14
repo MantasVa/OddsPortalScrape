@@ -150,7 +150,7 @@ class Scraper(object):
                 game_link = game_links[0]['href']
 
 
-            event_row_click = row.find(attrs={'data-testid': 'game-row' })
+            event_row_click = row.find('div', {"class": "group flex"})
             inside_divs = event_row_click.find_all('div', recursive=False)
 
             links = event_row_click.find_all('a', {"title" : re.compile(r".*")})
